@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.067,
-        "y": 5.179331140350877
+        "x": 3.5484320175438597,
+        "y": 2.4579385964912275
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.2305635964955104,
-        "y": 5.140866228067586
+        "x": 1.8752083333333334,
+        "y": 2.4290899122807
       },
       "isLocked": false,
-      "linkedName": "Bottom of Depot"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.7117324561403509,
-        "y": 4.015767543859649
+        "x": 0.866,
+        "y": 0.8520285087719299
       },
       "prevControl": {
-        "x": 3.423815789473683,
-        "y": 3.9932456140350885
+        "x": 2.4430614035087714,
+        "y": 0.8904934210526312
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Human player"
     }
   ],
   "rotationTargets": [],
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -2.0095538130211485
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": null,
