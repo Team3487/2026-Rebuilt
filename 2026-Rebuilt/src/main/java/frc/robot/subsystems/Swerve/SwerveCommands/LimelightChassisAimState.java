@@ -4,26 +4,25 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.math.MathUtil;
-
-import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve.CommandSwerveDrivetrain;
-
-import limelight.Limelight;
-import limelight.networktables.target.AprilTagFiducial;
+import limelight.*;
+import limelight.networktables.LimelightTargetData;
 
 public class LimelightChassisAimState extends Command {
     
     private CommandSwerveDrivetrain m_Drivetrain;
     private SwerveRequest.RobotCentric robotCentric;
     private RobotContainer robotContainer;
-    private static AprilTagFiducial apriltagTrack;
+    
+    private Limelight limeLight;
+    private LimelightTargetData targetData;
 
     final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
@@ -43,7 +42,7 @@ public class LimelightChassisAimState extends Command {
     double limelightTolerance = 0.1;
     Pose2d RobotPose;
 
-    Limelight limeLight = new Limelight("Limelight");
+
 
     public LimelightChassisAimState(CommandSwerveDrivetrain RealDescriptiveName, Pose2d goal){
 
@@ -56,20 +55,23 @@ public class LimelightChassisAimState extends Command {
 
     @Override
     public void initialize(){
-        apriltag = LimelightHelpers.getFiducialID("Limelight");        
+    limeLight = new Limelight("Limelight");
+    targetData = new LimelightTargetData(limeLight);
+    
     }
 
 
     @Override
     public void execute(){
+        RobotPose = targetData.getTargetToRobot().toPose2d();
+        apriltag = targetData.getAprilTagID();
         if(apriltag != 0){
-         RobotPose = apriltagTrack.getTargetPose_RobotSpace2D();
          
          xVelocity = MathUtil.clamp(-pidControllerX.calculate(goalPose2d.getX(),RobotPose.getX()),-maxLimelightSpeed,maxLimelightSpeed);
          yVelocity = MathUtil.clamp(-pidControllerY.calculate(goalPose2d.getY(),RobotPose.getY()),-maxLimelightSpeed,maxLimelightSpeed);
          turnRate = MathUtil.clamp(pidControllerY.calculate(0,RobotPose.getRotation().getDegrees()),-1,1);
          
-         if(Math.abs(goalPose2d.getX()-RobotPose.getX())<=limelightTolerance && Math.abs(goalPose2d.getY()-RobotPose.getY())<=limelightTolerance && Math.abs(goalPose2d.getRotation().getDegrees()-RobotPose.getRotation().getDegrees())<=limelightTolerance){
+         if(Math.abs(goalPose2d.getX()-RobotPose.getX())<=limelightTolerance && Math.abs(goalPose2d.getY()-RobotPose.getY())<=limelightTolerance && Math.abs(goalPose2d.getRotation().getDegrees()-RobotPose.getRotation().getDegrees())<=5){
          CommandScheduler.getInstance().schedule(m_Drivetrain.applyRequest(() -> robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(turnRate)));
          }
          else{
