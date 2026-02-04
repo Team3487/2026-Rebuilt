@@ -1,12 +1,16 @@
 package frc.robot.subsystems.Swerve.SwerveCommands;
 
+import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.LimelightHelpers;
@@ -14,7 +18,9 @@ import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve.CommandSwerveDrivetrain;
 import limelight.*;
+import limelight.networktables.AngularVelocity3d;
 import limelight.networktables.LimelightTargetData;
+import limelight.networktables.Orientation3d;
 
 public class LimelightChassisAimState extends Command {
     
@@ -22,6 +28,7 @@ public class LimelightChassisAimState extends Command {
     private SwerveRequest.RobotCentric robotCentric;
     private RobotContainer robotContainer;
     
+    private Pigeon2 gyro;
     private Limelight limeLight;
     private LimelightTargetData targetData;
 
@@ -56,7 +63,13 @@ public class LimelightChassisAimState extends Command {
 
     @Override
     public void initialize(){
+    gyro = new Pigeon2(13);
     limeLight = new Limelight("limelight-chassis");
+    //TODO:provide all settings for the limelight-chassis
+    limeLight.getSettings().withCameraOffset(new Pose3d(0,0,0, new Rotation3d())).withRobotOrientation(new Orientation3d(gyro.getRotation3d(),
+												 new AngularVelocity3d(DegreesPerSecond.of(gyro.getAngularVelocityXDevice().getValueAsDouble()),
+																	   DegreesPerSecond.of(gyro.getAngularVelocityZDevice().getValueAsDouble()),
+																	   DegreesPerSecond.of(gyro.getAngularVelocityYDevice().getValueAsDouble())))).save();
     targetData = new LimelightTargetData(limeLight);
     apriltag = targetData.getAprilTagID();
     System.out.println("hello, this is the april tag = " + apriltag);
