@@ -13,11 +13,10 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.LimelightHelpers;
 import frc.robot.RobotContainer;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Swerve.CommandSwerveDrivetrain;
-import limelight.*;
+import limelight.Limelight;
 import limelight.networktables.AngularVelocity3d;
 import limelight.networktables.LimelightTargetData;
 import limelight.networktables.Orientation3d;
@@ -48,7 +47,7 @@ public class LimelightChassisAimState extends Command {
     PIDController pidControllerTheta = TunerConstants.LIMELIGHT_PID_CONTROLLER_ROTATION;
     //in meters:
     double limelightTolerance = 0.1;
-    Pose2d RobotPose;
+    Pose3d RobotPose;
 
 
 
@@ -79,17 +78,20 @@ public class LimelightChassisAimState extends Command {
 
     @Override
     public void execute(){
-        RobotPose = targetData.getRobotToTarget().toPose2d();
+        limeLight.getSettings().withRobotOrientation(new Orientation3d(gyro.getRotation3d(),
+												 new AngularVelocity3d(DegreesPerSecond.of(gyro.getAngularVelocityXDevice().getValueAsDouble()),
+																	   DegreesPerSecond.of(gyro.getAngularVelocityZDevice().getValueAsDouble()),
+																	   DegreesPerSecond.of(gyro.getAngularVelocityYDevice().getValueAsDouble())))).save();
         
-        
+        RobotPose = targetData.getRobotToTarget();
         
         if(apriltag != -1){
          
          xVelocity = MathUtil.clamp(-pidControllerX.calculate(goalPose2d.getX(),RobotPose.getX()),-maxLimelightSpeed,maxLimelightSpeed);
          yVelocity = MathUtil.clamp(-pidControllerY.calculate(goalPose2d.getY(),RobotPose.getY()),-maxLimelightSpeed,maxLimelightSpeed);
-         turnRate = MathUtil.clamp(pidControllerY.calculate(0,RobotPose.getRotation().getDegrees()),-1,1);
+         turnRate = MathUtil.clamp(pidControllerY.calculate(goalPose2d.getRotation().getRadians(),RobotPose.getRotation().getX()),-1,1);
          
-         if(Math.abs(goalPose2d.getX()-RobotPose.getX())<=limelightTolerance && Math.abs(goalPose2d.getY()-RobotPose.getY())<=limelightTolerance && Math.abs(goalPose2d.getRotation().getDegrees()-RobotPose.getRotation().getDegrees())<=5){
+         if(Math.abs(goalPose2d.getX()-RobotPose.getX())<=limelightTolerance && Math.abs(goalPose2d.getY()-RobotPose.getY())<=limelightTolerance && Math.abs(goalPose2d.getRotation().getRadians()-RobotPose.getRotation().getX())<=0.2){
          CommandScheduler.getInstance().schedule(m_Drivetrain.applyRequest(() -> robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(turnRate)));
          }
          else{
